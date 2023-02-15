@@ -1,0 +1,266 @@
+<html>
+<canvas id = "gameCanvas" width = "800" height = "600"></canvas>
+
+
+<script>
+var canvas;
+var canvasContext;
+var centerCanvasX;
+var ballStartLocationX;
+var ballStartLocationY;
+var paddleStartLocationX;
+
+var ballX;
+var ballY;
+var startBallSpeedX = 0;
+var startBallSpeedY = 10;
+var ballSpeedX;
+var ballSpeedY;
+
+var paddleX;
+var radius = 10;
+
+const PADDLE_WIDTH = 120;
+const PADDLE_THICKNESS = 15;
+
+var brickRowCount = 6;
+var brickColumCount = 10;
+var brickWidth = 75;
+var brickHeight = 20;
+var brickPadding = 5;
+//var brickOffsetTop = 30;
+//var brickOffsetLeft = 30;
+var playerLose = false;
+var bricks = [];
+var ab = true;
+function calculateMousePos(evt){
+
+		var rect = canvas.getBoundingClientRect();
+		var root = document.documentElement;
+		var mouseX = evt.clientX - rect.left - root.scrollLeft;
+		var mouseY = evt.clientY - rect.top - root.scrollTop;
+		return {
+		        x:mouseX,
+				y:mouseY
+		};
+
+}
+
+function playAgain()
+{
+	if(playerLose)
+	{
+		ballSpeedX = startBallSpeedX;
+		ballSpeedY = startBallSpeedY;
+		playerLose = false;
+		restartAllBricks();
+	}
+	
+}
+
+
+window.onload = function(){ //מתחיל לרוץ רק אחרי שכל העמוד נטען
+	
+	 canvas = document.getElementById('gameCanvas');
+	 canvasContext = canvas.getContext('2d');
+
+	centerCanvasX = canvas.width / 2;
+    ballStartLocationX = centerCanvasX;
+	ballStartLocationY = canvas.height - PADDLE_THICKNESS - radius;
+	ballX = ballStartLocationX;
+	ballY = ballStartLocationY;
+	ballSpeedX = startBallSpeedX;
+	ballSpeedY = startBallSpeedY;
+	paddleStartLocationX = centerCanvasX - PADDLE_WIDTH/2;
+	paddleX =  paddleStartLocationX;
+	//var bricks = [];
+	restartAllBricks();
+	
+	
+	
+	 var framesPerSecond = 30;
+	 setInterval(function(){ 
+	             ballMovment();
+				 drawEveryThing();}
+				 , 1000/framesPerSecond);
+	 
+	 canvas.addEventListener('mousedown', playAgain);
+
+	 canvas.addEventListener('mousemove',
+			function(evt){
+				var mousePos = calculateMousePos(evt);
+				paddleX = mousePos.x - (PADDLE_WIDTH/2);
+				});
+				
+			
+				
+}
+
+function gameOver()
+{
+	playerLose = true;
+	
+	ballX = ballStartLocationX;
+	ballY = ballStartLocationY;
+	ballSpeedY = 0;
+	ballSpeedX = 0;
+	paddleX = paddleStartLocationX;
+	drowRect(0,0,canvas.width,canvas.height, 'black');
+	// drow the paddle
+	drowRect(paddleX, canvas.height - PADDLE_THICKNESS ,PADDLE_WIDTH, PADDLE_THICKNESS, 'red')
+	// drow the ballSpeed
+	drowCircle(ballX, ballY , radius, 'white');
+
+	canvasContext.textBaseline = 'middle'; 
+	canvasContext.textAlign = 'center'; 
+	canvasContext.font = "30px Arial";
+	canvasContext.fillText("Play Again", centerCanvasX , canvas.height / 2);
+}
+
+function ballMovment()
+{
+	ballX += ballSpeedX;
+	ballY -= ballSpeedY;
+	
+	if(ballY <= 0)
+	{
+		ballSpeedY *= -1;
+	}
+	if(ballY + radius >= canvas.height - PADDLE_THICKNESS)
+	{
+		if(ballX > paddleX && ballX < paddleX + PADDLE_WIDTH)
+		{
+			ab = true;
+			ballSpeedY *= -1;
+			var	deltaX = ballX - (paddleX + PADDLE_WIDTH/2);
+			ballSpeedX = deltaX * 0.35;
+		}
+		else if (ballY + radius > canvas.height +100)
+		{
+			gameOver();
+		}
+		
+	}
+	if(ballX <= 0)
+	{
+		ballSpeedX *= -1;
+	}
+	if(ballX >= canvas.width)
+	{
+		ballSpeedX *= -1;
+	}
+}
+
+function drowBricks()
+{
+
+	for(var i = 0; i < brickColumCount; i++)
+	{
+		for(var j = 0; j < brickRowCount ; j++)
+		{
+			console.log(bricks[i][j].x);
+			if(bricks[i][j].status == 1)
+			{
+				var brickX = i * (brickWidth + brickPadding) //+ brickOffsetLeft;
+				var brickY = j * (brickHeight + brickPadding) //+ brickOffsetTop;
+				bricks[i][j].x = brickX;
+				bricks[i][j].y = brickY;
+				drowRect(brickX, brickY, brickWidth, brickHeight , 'yellow');
+			}
+		}
+	}
+	
+	<!-- for( var i = 0; i < canvas.width; i += canvas.width/10) -->
+	<!-- { -->
+		<!-- for( var j = 0; j < 6*20; j+=20) -->
+		<!-- { -->
+			<!-- drowRect( i , j, canvas.width/10 - 1, 20 - 1, 'yellow'); -->
+		<!-- } -->
+	<!-- } -->
+}
+function restartAllBricks()
+{
+		for(var i = 0; i < brickColumCount; i++)
+	{
+		bricks[i] = [];
+		for(j = 0; j < brickRowCount; j++)
+		{
+			
+			bricks[i][j] = { x: 0, y: 0, status: 1 }; 
+			//console.log(bricks[i][j]);
+		}
+	}
+}
+function collision()
+{
+	for(var i = 0; i < brickColumCount; i++)
+	{
+		for(var j = 0; j < brickRowCount ; j++)
+		{
+			var b = bricks[i][j];
+			if(b.status == 1)
+			{
+				<!-- if(ballX > b.x && ballX < b.x + brickWidth && ballY > b.y && ballY < b.y + brickHeight) -->
+				<!-- { -->
+					<!-- ballSpeedY *= -1; -->
+					<!-- b.status = 0; -->
+				<!-- } -->
+				<!-- else if(ballX + radius > b.x && ballX + radius < b.x + brickWidth && ballY > b.y && ballY < b.y + brickHeight) -->
+				<!-- { -->
+					<!-- ballSpeedY *= -1; -->
+					<!-- b.status = 0; -->
+				<!-- } -->
+				<!-- else if(ballX - radius > b.x && ballX - radius < b.x + brickWidth && ballY > b.y && ballY < b.y + brickHeight) -->
+				<!-- { -->
+					<!-- ballSpeedY *= -1; -->
+					<!-- b.status = 0; -->
+				<!-- } -->
+				
+				
+				if((ballX > b.x && ballX < b.x + brickWidth ||
+ 				    ballX + radius > b.x && ballX + radius < b.x + brickWidth ||
+					ballX - radius > b.x && ballX - radius < b.x + brickWidth)
+					&& ballY > b.y && ballY < b.y + brickHeight)
+				{
+					if(ab){
+						ballSpeedY *= -1;
+						ab = false;
+					}
+
+					b.status = 0;
+				}
+				
+			}
+		}
+	}
+}
+function drawEveryThing()
+{	
+	
+	
+	if(!playerLose)
+	{
+
+		drowRect(0,0,canvas.width,canvas.height, 'black');
+		// drow the paddle
+		drowRect(paddleX, canvas.height - PADDLE_THICKNESS ,PADDLE_WIDTH, PADDLE_THICKNESS, 'red')
+		// drow the ballSpeed
+		drowCircle(ballX, ballY , radius, 'white');
+		drowBricks();
+		collision();
+	}
+}
+function drowRect(leftX,topY,width,height,color)
+{
+	canvasContext.fillStyle = color;
+	canvasContext.fillRect(leftX,topY,width,height);
+}
+function drowCircle(centerX, centerY, radius, drawColor) {
+
+ 	 canvasContext.fillStyle = drawColor;
+	 canvasContext.beginPath();              //pi*2 = full circle
+	 canvasContext.arc(centerX,centerY,radius,0,Math.PI*2,true); 
+	 canvasContext.fill();
+}
+</script>
+</html>
